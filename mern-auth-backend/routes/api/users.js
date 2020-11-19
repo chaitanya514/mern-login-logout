@@ -13,6 +13,7 @@ const validateLoginInput = require("../../validation/login");
 
 const User = require("../../models/User");
 const { unstable_renderSubtreeIntoContainer } = require("react-dom");
+const { secretOrKey } = require("../../config/keys");
 
 router.post("/register", (req, res) => {
     //Form validation 
@@ -45,5 +46,54 @@ router.post("/register", (req, res) => {
             });
         });
     })
+
+});
+
+
+// login check
+
+router.post("/login", (req, res) => {
+    // Form validation
+    const { errors, isValid } = validateLoginInput(req.body);
+    if (!isValid) {
+        return res.status(400).json(errors);
+    }
+
+    const email = req.body.email;
+    const password = req.body.password;
+
+    // find user by email 
+    User.findOne({ email }).then(user => {
+        if (!user) {
+            return res.status(404).json({ emailnotfound: "Email not found" });
+        }
+        //check password
+
+        bcrypt.compare(password, user.password).then(isMatch => {
+
+            if (isMatch) {
+                //User Matched  
+                // create JWT payload
+                const payload = {
+                    id: user.id,
+                    name: user.name
+                };
+
+                //sign token
+                jwt.sign(
+                    payload,
+                    keys.secretOrKey
+                )
+            }
+        })
+    })
+
+
+
+
+
+
+
+
 
 })
